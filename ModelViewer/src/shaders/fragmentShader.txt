@@ -1,0 +1,31 @@
+#version 400 core
+
+in vec2 pass_uv;
+in vec3 surface_normal;
+in vec3 light_vector;
+in vec3 camera_vector;
+
+out vec4 out_color;
+
+uniform sampler2D textureSampler;
+uniform vec3 light_color;
+uniform float shineDamper;
+uniform float reflectivity;
+
+void main(void){
+	vec3 unit_surface_normal = normalize(surface_normal);
+	vec3 unit_light_vector = normalize(light_vector);
+	vec3 unit_camera_vector = normalize(camera_vector);
+	
+	float dot_result = dot(unit_surface_normal, unit_light_vector);
+	float brightness = max(dot_result, 0.1);
+	vec3 diffuse = brightness * light_color;
+	
+	vec3 reflected_light = reflect(-unit_light_vector, unit_surface_normal);
+	float specular = dot(reflected_light, unit_camera_vector);
+	specular = max(specular, 0.0);
+	specular = pow(specular, shineDamper);
+	vec3 specular_vector = specular * reflectivity * light_color;
+	
+	out_color = vec4(diffuse, 1.0) * texture(textureSampler, pass_uv) + vec4(specular_vector, 1.0);
+}
